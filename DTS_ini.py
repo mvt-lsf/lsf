@@ -48,7 +48,7 @@ param_order=[names[1],names[0],names[2],names[7],names[8],"nd",names[9],names[4]
 
 entry = {}
 label = {}
-
+row_i=0
 for name in names:
     e = Entry(root)#font = "Helvetica 44 bold"
     e.grid(sticky=E)
@@ -58,7 +58,8 @@ for name in names:
     entry[name] = e
 
     lb = Label(root, text=name)
-    lb.grid(row=i, column=1,sticky=N+S+E+W)
+    lb.grid(row=row_i, column=1,sticky=N+S+E+W)
+    row_i+=1
     label[name] = lb
     
 def CrearIni(entry):#recibir el py y el exe para logear
