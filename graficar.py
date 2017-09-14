@@ -10,9 +10,9 @@ import pickle
 import datetime
 import os.path
 
-def createFileName(path,term,pozo):
+def filename_now(path,ext,pozo):
     timeStamp=datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d__%H_%M_%S')
-    nombreArchivo=path+pozos[pozo]+'_'+timeStamp+term
+    nombreArchivo=path+pozo+'_'+timeStamp+ext
     return nombreArchivo
 
 def init_file(filename,params):
@@ -24,17 +24,17 @@ def guardar_perfil(fid,data):#asume fid abierto como wb y data un array de numpy
     fid.write(data.tobytes())
 	
 
-path=''
-nPerfilesPorFile=200# es el numero de perfiels que guarda por archivo    
-
+###-###
 
 tam=int(sys.argv[1])
 perfiles_por_pozo=int(sys.argv[2])
-
+perfiles_por_archivo=200 #argv[3] soon   
 pozos=['GBK980','GBK981','GBK982','GBK983']
+
 params={'bins':tam,
         'perfiles_por_pozo':perfiles_por_pozo,
-        'secuencia_pozos':pozos} #hay que traer todos los parámetros desde C
+		'perfiles_por_archivo':perfiles_por_archivo}
+        #'secuencia_pozos':pozos} #hay que traer todos los parámetros desde C
 
 
 figura1=plt.figure()
@@ -61,14 +61,17 @@ ax4.set_ylim([Tplotmin,Tplotmax])
 
 graficos={'GBK980':(ax1,linea1),'GBK981':(ax2,linea2),'GBK982':(ax3,linea3),'GBK983':(ax4,linea4)}
 
-
-T0=-5
-dT=-6
+	
+	
 
 def blocking():
 	
 	Offset = [0,0,0,0]
-	Multi = [0.1,0.009,0.03,0.12]	
+	Multi = [0.1,0.009,0.03,0.12]
+	
+	files={}
+	for pozo in pozos:
+		files[pozo]=init_file(filename_now('','.dts',pozo), params)
 	
     pipeDTS = win32file.CreateFile("\\\\.\\pipe\\pipeDTS",
                               win32file.GENERIC_READ | win32file.GENERIC_WRITE,
@@ -79,22 +82,24 @@ def blocking():
 
     ydata_prom=np.zeros(tam)
     Tprom=np.zeros(tam)
-    ydata_acum=np.array([])
+    #ydata_acum=np.array([])
 	
     pozo=0
     while True:
 		
-        start=time.time()
 		
         try:
             rr,rd = win32file.ReadFile(pipeDTS, tam*8)
         except:
             print 'no pude leer el pipe'
             break
+			
+        start=time.time()
 
         ydata=np.frombuffer(rd,dtype=np.float64)
         ydata_prom+=ydata
 		
+		#TEMPERATURA
         kB=8.617*10**(-5)
         DE=0.05068
         dB=0.8676*10**(-5)
@@ -104,12 +109,12 @@ def blocking():
         t=np.arange(tam)*5
         Tref=((T0+0.007)/0.00987)+273.15
         T=(1/Tref-kB/DE*(np.log(rT)+(t-t0)*dB+Multi[pozo]))**(-1)-273.15+Offset[pozo]
-		
+				
 		Tprom+=T
-
+		#TEMPERATURA_END
+		
         ydata=np.append(ydata,[T0,dT])
-
-        ydata_acum=np.concatenate((ydata_acum,ydata),axis=0)
+		guardar_perfil(files[pozos[pozo]],ydata)#ydata_acum=np.concatenate((ydata_acum,ydata),axis=0)
 
         eje=graficos[pozos[pozo]]
         update(eje,Tprom,n)
@@ -122,17 +127,18 @@ def blocking():
 			
             ydata_prom=np.zeros(tam)
             Tprom=np.zeros(tam)
-            
-            nombreArchivo=createFileName(path,'.dts',pozo)
-            data_file=init_file(nombreArchivo,params)
-            guardar_perfil(data_file,ydata_acum)
-			data_file.close()
-            print "Guarda ", np.shape(ydata_acum)[0]/(tam+2)," perfiles"
+            pozo=(pozo+1)%4
+            resaltar_nuevo(graficos[pozos[(pozo-1)%4]][0],graficos[pozos[pozo]][0])
+			perfiles_guardados[pozo]+=perfiles_por_pozo
+      		if(perfiles_guardados[pozo]>=perfiles_por_archivo):
+				perfiles_guardados[pozo]=0
+				files[pozos[pozo]].close()
+				files[pozos[pozo]]=init_file(filename_now('','.dts',pozos[pozo]), params)		
+				
+            #print "Guarda ", np.shape(ydata_acum)[0]/(tam+2)," perfiles"
 #            print "TEMP: ",((T0+0.007)/0.00987),'+/-',(dT/0.00987)
             
-            pozo=(pozo+1)%4
-            ydata_acum=np.array([])
-            resaltar_nuevo(graficos[pozos[(pozo-1)%4]][0],graficos[pozos[pozo]][0])
+            #ydata_acum=np.array([])
 			
         print "Tiempo entre pipes ",(time.time()-start), " seg" 
 
@@ -199,10 +205,6 @@ def cambio_pozo():
 th=threading.Thread(target=cambio_pozo, args=())
 th.setDaemon(True)
 th.start()
-
-
-T0=0
-dT=0
 
 cerrar_labjack=threading.Event()
 def leeTemp():
