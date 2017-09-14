@@ -4,7 +4,7 @@ Created on Fri Aug 25 17:45:57 2017
 
 @author: MVT
 """
-#
+
 from Tkinter import *
 import tkFileDialog
 from shutil import copyfile
@@ -45,9 +45,10 @@ root = Tk()
 
 names = ["Puntos", "Shots por Chunks","Chunks por perfil", "Perfiles por pozo","Cociente frecuencia", "Rango CH1","Rango CH2", "Referencia Stokes","Referencia Anti-Stokes","Delay"]
 param_order=[names[1],names[0],names[2],names[7],names[8],"nd",names[9],names[4],names[5],names[6],names[3]]
+
 entry = {}
 label = {}
-i = 0
+
 for name in names:
     e = Entry(root)#font = "Helvetica 44 bold"
     e.grid(sticky=E)
@@ -58,10 +59,7 @@ for name in names:
 
     lb = Label(root, text=name)
     lb.grid(row=i, column=1,sticky=N+S+E+W)
-#    lb.pack()
     label[name] = lb
-    i += 1
-#for archivo in archivos:
     
 def CrearIni(entry):#recibir el py y el exe para logear
     config = configparser.ConfigParser()
@@ -76,7 +74,7 @@ def ejecutar():
     
     exe = tkFileDialog.askopenfilename(title='Ejecutable DTS')#recomendar path viejo
     
-    #guardar codigo
+    #guardar y compilar codigo
     
     py = tkFileDialog.askopenfilename(title='Python DTS')
     
