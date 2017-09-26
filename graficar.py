@@ -8,7 +8,6 @@ import serial
 import u3
 import pickle
 import datetime
-import os.path
 
 def filename_now(path,ext,pozo):
     timeStamp=datetime.datetime.fromtimestamp(time.time()).strftime('%Y_%m_%d__%H_%M_%S')
@@ -24,14 +23,17 @@ def guardar_perfil(fid,data):#asume fid abierto como wb y data un array de numpy
     fid.write(data.tobytes())
     
 
+###-###
+
 tam=int(sys.argv[1])
 perfiles_por_pozo=int(sys.argv[2])
-perfiles_por_archivo=200 #argv[3] soon   
+perfiles_por_archivo=20 #argv[3] soon   
+                              
 pozos=['GBK980','GBK981','GBK982','GBK983']
 
 params={'bins':tam,
         'perfiles_por_pozo':perfiles_por_pozo,
-        'perfiles_por_archivo':perfiles_por_archivo}
+        'perfiles_por_archivo':perfiles_por_archivo+perfiles_por_archivo%perfiles_por_pozo}
         #'secuencia_pozos':pozos} #hay que traer todos los parámetros desde C
 
 
@@ -60,16 +62,43 @@ ax4.set_ylim([Tplotmin,Tplotmax])
 graficos={'GBK980':(ax1,linea1),'GBK981':(ax2,linea2),'GBK982':(ax3,linea3),'GBK983':(ax4,linea4)}
 
     
+
+def V2T_2ch(ydata_2cha,Tref,tam,pozo):
+    
+    t0=58*5
+    DE=[50.68*10**(-3),50.68*10**(-3),50.68*10**(-3),50.68*10**(-3)]
+    
+    dB=[0.905*10**(-5),0.905*10**(-5),0.905*10**(-5),0.905*10**(-5)]
+
+    Multi = [0,0,0,0]
+    tbocapozo = [0,0,0,0]
+    rT=ydata_2cha[0:tam]/ydata_2cha[tam:]
+    t=np.arange(tam)*5    
+    kB=8.617*10**(-5)
+    return (1/Tref-kB/DE[pozo]*(np.log(rT)+(t-t0-tbocapozo[pozo])*dB[pozo]+Multi[pozo]))**(-1)-273.15    
+
+def V2T(ydata,Tref,tam,pozo):
+    
+    t0=58*5
+    DE=[50.68*10**(-3),50.68*10**(-3),50.68*10**(-3),50.68*10**(-3)]
+    
+    dB=[0.905*10**(-5),0.905*10**(-5),0.905*10**(-5),0.905*10**(-5)]
+
+    Multi = [0,0,0,0]
+    tbocapozo = [0,0,0,0]
+    t=np.arange(tam)*5    
+    kB=8.617*10**(-5)
+    return (1/Tref-kB/DE[pozo]*(np.log(ydata)+(t-t0-tbocapozo[pozo])*dB[pozo]+Multi[pozo]))**(-1)-273.15    
     
 
 def blocking():
     
-    Offset = [0,0,0,0]
-    Multi = [0.1,0.009,0.03,0.12]
     
     files={}
+    perfiles_guardados={}
     for pozo in pozos:
         files[pozo]=init_file(filename_now('','.dts',pozo), params)
+        perfiles_guardados[pozo]=0
     
     pipeDTS = win32file.CreateFile("\\\\.\\pipe\\pipeDTS",
                               win32file.GENERIC_READ | win32file.GENERIC_WRITE,
@@ -77,17 +106,19 @@ def blocking():
                               win32file.OPEN_EXISTING,
                               0, None)
     perfil_actual=1
-
+    
     ydata_prom=np.zeros(tam)
     Tprom=np.zeros(tam)
     #ydata_acum=np.array([])
-    
+        
     pozo=0
     while True:
         
         
         try:
             rr,rd = win32file.ReadFile(pipeDTS, tam*8)
+            rr2,rd2=win32file.ReadFile(pipeDTS, 13)
+            print "TIMESTAMP ",rd2
         except:
             print 'no pude leer el pipe'
             break
@@ -98,16 +129,8 @@ def blocking():
         ydata_prom+=ydata
         
         #TEMPERATURA
-        kB=8.617*10**(-5)
-        DE=0.05068
-        dB=0.8676*10**(-5)
-        t0=58*5# traer el 58 que es el bin de referencia desde C o el script de inicio
-        
-        rT=ydata
-        t=np.arange(tam)*5
         Tref=((T0+0.007)/0.00987)+273.15
-        T=(1/Tref-kB/DE*(np.log(rT)+(t-t0)*dB+Multi[pozo]))**(-1)-273.15+Offset[pozo]
-                
+        T=V2T(ydata,Tref,tam,pozo)        
         Tprom+=T
         #TEMPERATURA_END
         
@@ -115,7 +138,7 @@ def blocking():
         guardar_perfil(files[pozos[pozo]],ydata)#ydata_acum=np.concatenate((ydata_acum,ydata),axis=0)
 
         eje=graficos[pozos[pozo]]
-        update(eje,Tprom,n)
+        update(eje,Tprom,perfil_actual)
         
         perfil_actual+=1
         
@@ -127,9 +150,9 @@ def blocking():
             Tprom=np.zeros(tam)
             pozo=(pozo+1)%4
             resaltar_nuevo(graficos[pozos[(pozo-1)%4]][0],graficos[pozos[pozo]][0])
-            perfiles_guardados[pozo]+=perfiles_por_pozo
-              if(perfiles_guardados[pozo]>=perfiles_por_archivo):
-                perfiles_guardados[pozo]=0
+            perfiles_guardados[pozos[pozo]]+=perfiles_por_pozo
+            if(perfiles_guardados[pozos[pozo]]>=perfiles_por_archivo):
+                perfiles_guardados[pozos[pozo]]=0
                 files[pozos[pozo]].close()
                 files[pozos[pozo]]=init_file(filename_now('','.dts',pozos[pozo]), params)        
                 
@@ -248,4 +271,3 @@ print "CHAU LABJACK"
 
 th2.join()
 th.join()
-
