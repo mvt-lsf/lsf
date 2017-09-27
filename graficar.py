@@ -148,13 +148,13 @@ def blocking():
             
             ydata_prom=np.zeros(tam)
             Tprom=np.zeros(tam)
-            pozo=(pozo+1)%4
-            resaltar_nuevo(graficos[pozos[(pozo-1)%4]][0],graficos[pozos[pozo]][0])
             perfiles_guardados[pozos[pozo]]+=perfiles_por_pozo
             if(perfiles_guardados[pozos[pozo]]>=perfiles_por_archivo):
                 perfiles_guardados[pozos[pozo]]=0
                 files[pozos[pozo]].close()
                 files[pozos[pozo]]=init_file(filename_now('','.dts',pozos[pozo]), params)        
+            pozo=(pozo+1)%4
+            resaltar_nuevo(graficos[pozos[(pozo-1)%4]][0],graficos[pozos[pozo]][0])
                 
             #print "Guarda ", np.shape(ydata_acum)[0]/(tam+2)," perfiles"
 #            print "TEMP: ",((T0+0.007)/0.00987),'+/-',(dT/0.00987)
