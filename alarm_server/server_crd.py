@@ -24,18 +24,18 @@ for eq in equipos_validos:
 def alerta_mail():
 	global sent_mail
 	print 'empieza monitoreo con mail'
-	seg_thresh_interval=[10,20,30,60,180]
+	min_thresh_interval=[10,20,30,60,180]
 	current_th=0
 	while(True):
-		time.sleep(seg_thresh_interval[current_th])
+		time.sleep(min_thresh_interval[current_th]*60)
 		time_ref=datetime.datetime.now()
 		for equipo in equipos_validos:
-			if (time_ref-last_uptime[equipo]).seconds>seg_thresh_interval[0]:
+			if (time_ref-last_uptime[equipo]).seconds>min_thresh_interval[0]*60:
 				if not sent_mail:
 					sent_mail=True
 					current_th=0
 				send_alarm(equipo)
-				if current_th<len(seg_thresh_interval)-1:
+				if current_th<len(min_thresh_interval)-1:
 					current_th+=1
 
 
