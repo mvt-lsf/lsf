@@ -17,18 +17,26 @@ def send_alarm(equipo):
 equipos_validos=['GBK_DTS']
 last_uptime={}
 primera_conexion=True
+sent_mail=False
 for eq in equipos_validos:
 	last_uptime[eq]=datetime.datetime.now()
 	
 def alerta_mail():
+	global sent_mail
 	print 'empieza monitoreo con mail'
-	seg_thresh=10*60
+	seg_thresh_interval=[10,20,30,60,180]
+	current_th=0
 	while(True):
-		time.sleep(seg_thresh)
+		time.sleep(seg_thresh_interval[current_th])
 		time_ref=datetime.datetime.now()
 		for equipo in equipos_validos:
-			if (time_ref-last_uptime[equipo]).seconds>seg_thresh:
+			if (time_ref-last_uptime[equipo]).seconds>seg_thresh_interval[0]:
+				if not sent_mail:
+					sent_mail=True
+					current_th=0
 				send_alarm(equipo)
+				if current_th<len(seg_thresh_interval)-1:
+					current_th+=1
 
 
 		
@@ -38,7 +46,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
     def do_POST(self):
-    	global primera_conexion
+    	global primera_conexion,sent_mail
         self._set_headers()
         print "in post method"
         self.data_string = self.rfile.read(int(self.headers['Content-Length']))
@@ -50,6 +58,8 @@ class Handler(BaseHTTPRequestHandler):
 					th=threading.Thread(target=alerta_mail)
 					th.start()	
 				last_uptime[key]=datetime.datetime.now()
+				if sent_mail:
+					sent_mail=False
 
 
 port=8081
