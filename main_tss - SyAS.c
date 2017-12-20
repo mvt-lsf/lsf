@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "WD-dask64.h"
-// renombra algunos par·metros de la placa para usarlos en las funciones. los de la derecha significan algo para la placa
+// renombra algunos par√°metros de la placa para usarlos en las funciones. los de la derecha significan algo para la placa
 #define TIMEBASE      WD_IntTimeBase
 #define ADTRIGSRC     WD_AI_TRGSRC_ExtD
 //#define ADTRIGSRC     WD_AI_TRGSRC_SOFT
@@ -15,7 +15,7 @@
 #define CHUNKS 20
 #define CONSUMIDORES 1
 #define TS_SIZE 13
-#define TS_FORMAT "%y%d%m%I%M%S"
+#define TS_FORMAT "%y%m%d%H%M%S"
 
 HANDLE pipePozoCWrite;
 HANDLE pipePozoCRead;
@@ -27,7 +27,7 @@ HANDLE pipeDTS;
 typedef enum { false, true } bool;
 
 
-// en la estructura callback estamos juntamos todas las variables externas que utiliza la funciÚn AI_CallBack
+// en la estructura callback estamos juntamos todas las variables externas que utiliza la funci√≤n AI_CallBack
 short* chkBuffer;
 
 bool salir=false;
@@ -56,10 +56,10 @@ struct {
     HANDLE cambio_pozo; // defini un envento para avisar que se debe cambiar de pozo
     HANDLE semConsumidor[CONSUMIDORES];
 }callback;
-/* se definen como globales los tipos de datos que utilizan los procesos. Los porcesos no admiten ning˙n tipo de argumento
- porque es un creador de una funciÛn, tiene que ser capaz de poder ejecutar culaquier cosa. Lo que se hace es pasarle un puntero a void y en esa direcciÛn se
- cargan todos los par·metros que necesita el proceso. La ˙nica alternativa es tener todas las variables del proceso como globales. Una vez definido el tipo
- cuando se lanza el proceso se crea un estructura particular del tipo correspondiente y se le pasa la direcciÛn de memoria al proceso. dentro del proceso
+/* se definen como globales los tipos de datos que utilizan los procesos. Los porcesos no admiten ning√∫n tipo de argumento
+ porque es un creador de una funci√≥n, tiene que ser capaz de poder ejecutar culaquier cosa. Lo que se hace es pasarle un puntero a void y en esa direcci√≥n se
+ cargan todos los par√°metros que necesita el proceso. La √∫nica alternativa es tener todas las variables del proceso como globales. Una vez definido el tipo
+ cuando se lanza el proceso se crea un estructura particular del tipo correspondiente y se le pasa la direcci√≥n de memoria al proceso. dentro del proceso
  se accede a las variables*/
 
 typedef struct th_data{
@@ -86,12 +86,12 @@ typedef struct th_Matriz{
 
 
 void AI_CallBack(){
-// sino est· en pausa ejecuta normal, est· en pausa mientras espera el cambio de pozo
+// sino est√° en pausa ejecuta normal, est√° en pausa mientras espera el cambio de pozo
     if (callback.contadorPozo%100==0)   printf("Callback chunk %d/%d\n",callback.contadorPozo,callback.chunksPorPozo);
     if(!callback.pausa){
         short* bufferPlaca;
 
-    // le pasamos la direcciÛn de memoria del primer elemento del buffer donde escribiÛ la placa
+    // le pasamos la direcci√≥n de memoria del primer elemento del buffer donde escribi√≥ la placa
         if (callback.bufferActual){
                 bufferPlaca=callback.ai_buf;
         }else{
@@ -137,7 +137,7 @@ void AI_CallBack(){
         if (callback.contadorPozo==callback.chunksPorPozo){
             callback.contadorPozo=0;
             printf("voy a setear el evento\n");
-            SetEvent(callback.cambio_pozo); //sucediÛ el evento
+            SetEvent(callback.cambio_pozo); //sucedi√≥ el evento
           //  printf("setie el evento\n");
             callback.pausa=true; //se setea en true para esperar que se consuma el cambio de pozo
         }
@@ -178,19 +178,19 @@ void* cambio_de_pozo(void* n){
 
 
 void adquirir(short nCh, int qFreqAdq, int rangoDinCh1,int rangoDinCh2, int bins, int nShotsChk, int delay) {
-    /* configura la placa pasando el n˘mero de canales, el entero por el que se divide la freq de adquisiciÚn m‡xima.
+    /* configura la placa pasando el n√πmero de canales, el entero por el que se divide la freq de adquisici√≤n m√†xima.
     qFreqAdq 1, 2,3,.......,2^16
      rangoDin 0,1,2 equivale a +-0.2V +-2V y +-10V
-     Adem·s configura los buffers de la RAM a la que la placa transfire los datos aibuf1 y aibuf2.
+     Adem√°s configura los buffers de la RAM a la que la placa transfire los datos aibuf1 y aibuf2.
      Configura triggres, bufferes de la placa. WD_AI_ContBufferSetup y WD_Buffer_Alloc
-     inicia la adquisiciÚn
+     inicia la adquisici√≤n
     */
 
 
 //variables placa
 	I16 Id,Id2, card;//son requeridas por funciones de la placa para almacenar cosas. son de uso exclusivo de las funciones de la placa
 	U16 card_type=PCIe_9852;
-	U16 card_num=0; //arranca en 0, en esta compu habÏa dos placas la 0 y la 1.
+	U16 card_num=0; //arranca en 0, en esta compu hab√¨a dos placas la 0 y la 1.
 
 	if ((card=WD_Register_Card (card_type, card_num)) <0 ) {
 		printf("Register_Card error=%d", card);
@@ -201,7 +201,7 @@ void adquirir(short nCh, int qFreqAdq, int rangoDinCh1,int rangoDinCh2, int bins
 	// configura los buffers de la ram donde se transfieren los datos de la placa
 	int puntosChk=nCh*bins*nShotsChk;
 	int tamBuffer =puntosChk*sizeof(I16);
-  short* ai_buf = WD_Buffer_Alloc (card, tamBuffer);//direcciÚn de memoria del buffer de la ram utilizado por la placa para descargar los datos.
+  short* ai_buf = WD_Buffer_Alloc (card, tamBuffer);//direcci√≤n de memoria del buffer de la ram utilizado por la placa para descargar los datos.
    //lo tiene que utilizar el callback que vaya a buscar los datos por lo que tine que ser global. Hay un buffer en la ram por cada buffer en la placa.
    if(!ai_buf)
    {
@@ -235,7 +235,7 @@ void adquirir(short nCh, int qFreqAdq, int rangoDinCh1,int rangoDinCh2, int bins
 	   WD_Release_Card(card);
        exit(1);
    }
-   // seteamos impedancia y rango din‡mico de los canales
+   // seteamos impedancia y rango din√†mico de los canales
    U16 rango1,rango2;
    switch(rangoDinCh1){
    case 0:
@@ -263,7 +263,7 @@ void adquirir(short nCh, int qFreqAdq, int rangoDinCh1,int rangoDinCh2, int bins
     WD_AI_CH_ChangeParam(card,1,AI_RANGE,rango2);
 //----------------------------------------------------
 
-//ver en el manual de la placa esta funciÚn
+//ver en el manual de la placa esta funci√≤n
    err = WD_AI_Config (card, TIMEBASE, 1, WD_AI_ADCONVSRC_TimePacer, 0, BUFAUTORESET);
    if (err!=0) {
        printf("WD_AI_Config error=%d", err);
@@ -273,7 +273,7 @@ void adquirir(short nCh, int qFreqAdq, int rangoDinCh1,int rangoDinCh2, int bins
        exit(1);
    }
    //------------------------------------------
-   //configuraciÚn del trigger
+   //configuraci√≤n del trigger
 
    err = WD_AI_Trig_Config (card, ADTRIGMODE, ADTRIGSRC, ADTRIGPOL, 0, 0.0, 0, 0, delay, 0);
    if (err!=0) {
@@ -285,8 +285,8 @@ void adquirir(short nCh, int qFreqAdq, int rangoDinCh1,int rangoDinCh2, int bins
    }
 
 //----------------------------------------------------
-// Configura el callBack. El evento es que se llenÛ el buffer de la placa. TrigEvent harÌa otra cosa seg˙n el manual, pero con este funciona y con que sugiere el manual no
-//el callback es el productor trae los datos del buffer de la ram reservado para la placa a los chunks. Por eso recibe tambiËn los sem‡foros de los consumidores
+// Configura el callBack. El evento es que se llen√≥ el buffer de la placa. TrigEvent har√≠a otra cosa seg√∫n el manual, pero con este funciona y con que sugiere el manual no
+//el callback es el productor trae los datos del buffer de la ram reservado para la placa a los chunks. Por eso recibe tambi√®n los sem√†foros de los consumidores
     callback.bins=bins;
     callback.nCh=nCh;
     callback.nShotsChk=nShotsChk;
@@ -307,7 +307,7 @@ void adquirir(short nCh, int qFreqAdq, int rangoDinCh1,int rangoDinCh2, int bins
 //----------------
 //reserva memoria para  los chunks: short* chkBuffer
 
-// creamos sem·foros
+// creamos sem√°foros
 callback.semConsumidor[0]=CreateSemaphore(NULL,0,CHUNKS,NULL);
 
 
@@ -412,7 +412,7 @@ void *procesaMatriz(void* n){
 
 
 void *procesaDTS_01(void* n){
-    //Esta funciÛn sÛlo sirve para la adquisiciÛln de 2Chns
+    //Esta funci√≥n s√≥lo sirve para la adquisici√≥ln de 2Chns
     /* Esto es lo que hay en el main.
     th_data DatosThread; // crea una estructura del tipo th_data
     DatosThread.bins=bins;
@@ -439,8 +439,8 @@ void *procesaDTS_01(void* n){
     chunks que se van guardando en las filas de la matriz acumula o acumula 2. Usamos dos matrices para que mientras se escribe en una se pueda procesar la otra
     Como el procesamiento final se hace al final del ciclo esto desbalancea el loop y puede hacer que el proceso se retrace y se acumulen chunks. Para evitar eso
     el procesamiento final lo va a hacer otro proceso. procesaDTS_01 baja los chunks hace el acumulado de ese chk y lo guarda en una fila de acumula o acumula 2.
-    Cuando la matrir1z se completa mediante un sem·foro, le avisa al proceso hijo que tiene una matriz para procesar y sigue consumiendo chk.*/
-    double **acumula=malloc(nChkP*sizeof(double*)); //reserba un arreglo de punteros, cada uno de ellos va a tener bins punteros (ver la asignaciÚn de acumuladora)
+    Cuando la matrir1z se completa mediante un sem√°foro, le avisa al proceso hijo que tiene una matriz para procesar y sigue consumiendo chk.*/
+    double **acumula=malloc(nChkP*sizeof(double*)); //reserba un arreglo de punteros, cada uno de ellos va a tener bins punteros (ver la asignaci√≤n de acumuladora)
     double **acumula2=malloc(nChkP*sizeof(double*));
 	int *nZ1=malloc(bins*sizeof(int));
 	int *nZ2=malloc(bins*sizeof(int));
@@ -453,7 +453,7 @@ void *procesaDTS_01(void* n){
     int nChk=0;
     int k;
     DWORD ccount;
-    HANDLE semMatriz=CreateSemaphore(NULL,0,2,NULL);//este sem‡foro le va a avisar al proceso hijo procesaMatriz que tiene una matriza para procesar.
+    HANDLE semMatriz=CreateSemaphore(NULL,0,2,NULL);//este sem√†foro le va a avisar al proceso hijo procesaMatriz que tiene una matriza para procesar.
 
 
     th_Matriz datosMatriz; // crea una estructura del tipo th_Matriz
@@ -493,10 +493,10 @@ void *procesaDTS_01(void* n){
 		for(i=0;i<nChkP;i++){
     /*para el i-esimo chunk*/
             WaitForSingleObject(callback.semConsumidor[0], INFINITE);//epsera un chunk para procesar.
-            /*recorre el chunk shot por shot para hacer la normalizaciÚn. */
+            /*recorre el chunk shot por shot para hacer la normalizaci√≤n. */
             //printf("\n llego el chunk i: %d\n ",i);
                     for(k=0;k<nShotsChk;++k){
-                        int indice=k*bins*2; //inicio del k-esimo shot en chunkActual nCh es el n˘mero de canales
+                        int indice=k*bins*2; //inicio del k-esimo shot en chunkActual nCh es el n√πmero de canales
 
                         short refAs=chkActual[indice+nRef*nCh];//chkActual apunto al inicio dle Chk
                         short refS=chkActual[indice+nRef*nCh+1];
@@ -515,8 +515,8 @@ void *procesaDTS_01(void* n){
 						   }
 						}
                     }
-                    /*ac‡ actualizamos chunkActual. nCh es el n˘mero del chunk actual. Calculamos el mÚdulo de dividir por el n˘mero de chunks (CHUNKS) y multimplicamos eso por el n˘mero de elementos
-                    en un chunk el resultado se lo sumamos a chkbuffer. AsÏ nos ahorramos un if ver comentario m‡s abajo*/
+                    /*ac√† actualizamos chunkActual. nCh es el n√πmero del chunk actual. Calculamos el m√≤dulo de dividir por el n√πmero de chunks (CHUNKS) y multimplicamos eso por el n√πmero de elementos
+                    en un chunk el resultado se lo sumamos a chkbuffer. As√¨ nos ahorramos un if ver comentario m√†s abajo*/
                     callback.disponible[nChk]=true;// avisa que al productor que ya puede escribir en el nChk-esimo chk
                     nChk=(nChk+1)%CHUNKS;
                     chkActual=chkBuffer+bins*nShotsChk*nCh*nChk;
@@ -524,7 +524,7 @@ void *procesaDTS_01(void* n){
 
            // if (chActual==chkBuffer+bins*nShotsChk*nCh*CHUNKS)chkActual=chkBuffer;
         }
-        matriz=!matriz; //niego matriz para que el prÚximo chunk se procese en la matriz disponible
+        matriz=!matriz; //niego matriz para que el pr√≤ximo chunk se procese en la matriz disponible
         printf("paso una matriz para colapsar\n");
         ReleaseSemaphore(semMatriz,1,&ccount);// le avisamos al proceso que colapsa la matriz que tiene una matriz disponible
 
@@ -543,7 +543,7 @@ int main(int argc, char* argv[])
 {
 
     int nShotsChk=atoi(argv[1]); //numreo de shots por chunk
-    int bins=atoi(argv[2]);// numero de bines por shot m‡s de 80 y m`yltiplo de 8
+    int bins=atoi(argv[2]);// numero de bines por shot m√†s de 80 y m`yltiplo de 8
     int nChkP=atoi(argv[3]);//numero de chunk a procesar
     int norm1=atoi(argv[4]);
     int norm2=atoi(argv[5]);//rango para normalizar
@@ -606,7 +606,7 @@ int main(int argc, char* argv[])
     DatosThread.nRef=norm1;
     DatosThread.nShotsChk=nShotsChk;
 
-    /*llama la funciÚn adquirir desde donde se lanzan el productor y se setea el resto del callback*/
+    /*llama la funci√≤n adquirir desde donde se lanzan el productor y se setea el resto del callback*/
     adquirir(2,qFreq,r1,r2,bins,nShotsChk,delay);
     /*lanza el proceso procesaDTS_01 (el consumidor)*/
         DWORD dtsID;
