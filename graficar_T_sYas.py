@@ -37,8 +37,8 @@ pozos=['GBK980','GBK981','GBK982','GBK983']
 
 params={'bins':tam,
         'perfiles_por_pozo':perfiles_por_pozo,
-        'perfiles_por_archivo':perfiles_por_archivo+perfiles_por_archivo%perfiles_por_pozo}
-        #'secuencia_pozos':pozos} #hay que traer todos los par·metros desde C
+        'perfiles_por_archivo':np.ceil(float(perfiles_por_archivo)/float(perfiles_por_pozo))}
+        #'secuencia_pozos':pozos} #hay que traer todos los par√°metros desde C
 
 
 figura1=plt.figure()
