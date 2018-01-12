@@ -37,7 +37,7 @@ pozos=['GBK980','GBK981','GBK982','GBK983']
 
 params={'bins':tam,
         'perfiles_por_pozo':perfiles_por_pozo,
-        'perfiles_por_archivo':int(np.ceil(float(perfiles_por_archivo)/float(perfiles_por_pozo)))}
+        'perfiles_por_archivo':int(np.ceil(float(perfiles_por_archivo)/float(perfiles_por_pozo)))*perfiles_por_pozo}
         #'secuencia_pozos':pozos} #hay que traer todos los parámetros desde C
 
 
