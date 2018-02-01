@@ -392,7 +392,7 @@ void *procesaMatriz(void* n){
 	}
         //for(j=0;j<bins;j++)acumulado[j]/=(nChkP*nShotsChk);
 
-		strftime (buffer_ts,TS_SIZE,TS_FORMAT,localtime(callback.tss[indice_tss]));
+		strftime (buffer_ts,TS_SIZE,TS_FORMAT,localtime(&callback.tss[indice_tss]));
 		printf("NOW: %s\n",buffer_ts);
 
 		indice_tss= (indice_tss+1) %callback.size_tss;
