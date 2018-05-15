@@ -44,6 +44,9 @@ def encontrar_alarmas(imagen_std,avg,std,umbrales_porcentaje,ventana_alarma,zona
 def nombre_avg(archivo):
     return '../AVG/'+archivo[:-3]+'avg'
 
+def nombre_std(i):
+	return '0'*(6-len(str(i)))+str(i)+'.std' #crea los nombres de archivo desde 000000 a 999999 a partir del nombre
+
 def cargar_archivos(archivos_std,bins,bin_inicio=0,bin_fin=-1,norm=True):
     imagen_std_actual=cargar_archivo(archivos_std[0],bins,bin_inicio,bin_fin,norm)#cargo el primero
     for archivo in archivos_std[1:]:#cargo los restantes
