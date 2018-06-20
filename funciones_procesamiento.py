@@ -47,7 +47,7 @@ def nombre_avg(archivo):
 def nombre_std(i):
 	return '0'*(6-len(str(i)))+str(i)+'.std' #crea los nombres de archivo desde 000000 a 999999 a partir del nombre
 
-def cargar_archivos(archivos_std,bins,bin_inicio=0,bin_fin=-1,norm=True):
+def cargar_archivos(archivos_std,bins,bin_inicio=0,bin_fin=None,norm=True):
     imagen_std_actual=cargar_archivo(archivos_std[0],bins,bin_inicio,bin_fin,norm)#cargo el primero
     for archivo in archivos_std[1:]:#cargo los restantes
         print os.path.getctime(archivo),os.path.getmtime(archivo)
@@ -68,7 +68,7 @@ def z_binning_vect(data,window):
 def zonear(data,ultima_multiplo,ancho_zona,filas):
     return np.array([z_binning_vect(data[i,:ultima_multiplo],ancho_zona)for i in range (filas)])
 
-def cargar_linea_de_base(filename_base,bins,bin_inicio,bin_fin,ancho_zona,zonas,base_inicio=0,base_fin=-1,norm=True):
+def cargar_linea_de_base(filename_base,bins,bin_inicio,bin_fin,ancho_zona,zonas,base_inicio=0,base_fin=None,norm=True):
 
     linea_de_base=cargar_archivo(filename_base,bins,bin_inicio,bin_fin,norm)[base_inicio:base_fin,:]
     ultima_multiplo=ancho_zona*zonas
